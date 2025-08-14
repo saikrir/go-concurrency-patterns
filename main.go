@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+const HI_VAL = 50000_0000
+
 func repeatFn[T any](done <-chan bool, aFn func() T) <-chan T {
 	repeatStream := make(chan T)
 
@@ -98,7 +100,7 @@ func fanIn[T int](done <-chan bool, input ...<-chan T) <-chan T {
 
 func pipeLine() {
 	generatorFn := func() int {
-		return rand.Intn(5000_0000)
+		return rand.Intn(HI_VAL)
 	}
 
 	doneChan := make(chan bool)
@@ -109,11 +111,13 @@ func pipeLine() {
 	for v := range take(doneChan, primesStream, 10) {
 		fmt.Println("Prime Generated ", v)
 	}
+
+	close(doneChan)
 }
 
 func fanInAndOut() {
 	generatorFn := func() int {
-		return rand.Intn(5000_0000)
+		return rand.Intn(HI_VAL)
 	}
 
 	doneChan := make(chan bool)
@@ -132,6 +136,8 @@ func fanInAndOut() {
 	for v := range take(doneChan, fanIn(doneChan, fanOutChans...), 10) {
 		fmt.Println("Prime Generated ", v)
 	}
+
+	close(doneChan)
 }
 
 func main() {
@@ -144,6 +150,6 @@ func main() {
 	//pipeLine()
 
 	fanInAndOut()
-
+	time.Sleep(5 * time.Second)
 	fmt.Println("Num Goroutines ", runtime.NumGoroutine())
 }
